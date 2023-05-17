@@ -21,15 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 'use strict';
 
 var path = require('path');
 var fs = require('fs');
+var semver = require('semver');
 var Q = require('q');
+var requireg = require('requireg');
+var npm = requireg('npm');
 var npmLoad = require('./_load');
 var npmConfig = require('./_config');
-var _require = require('child_process'),
-  exec = _require.exec;
 module.exports = function cache(args) {
   return cacheAdd(args).then(function (result) {
     return readCacheQueryResult(result);
@@ -50,7 +52,36 @@ module.exports = function cache(args) {
  */
 function cacheAdd(pkg) {
   return npmLoad().then(function (meta) {
-    return npmCacheAdd(pkg);
+    if (semver.lt(meta.version, '5.0.0')) {
+      return npmCacheAddLegacy(pkg);
+    } else {
+      return npmCacheAdd(pkg);
+    }
+  });
+}
+
+/**
+ * Run npm cache command and resolve the deferred object with the returned
+ * metadata.
+ *
+ * @param {string} pkg NPM Package id (i.e `bower@1.8.0`).
+ * @return {void}
+ */
+function npmCacheAddLegacy(pkg) {
+  return Q.Promise(function (resolve, reject) {
+    npm.commands.cache(['add', pkg], function (err, data) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({
+          cache: npm.cache,
+          name: data.name,
+          version: data.version,
+          path: path.resolve(npm.cache, data.name, data.version, 'package.tgz'),
+          integrity: null
+        });
+      }
+    });
   });
 }
 
@@ -63,7 +94,7 @@ function cacheAdd(pkg) {
  */
 function npmCacheAdd(pkg) {
   var promise = Q.promise(function (resolve, reject) {
-    exec('npm cache add ' + pkg, function (err, result) {
+    npm.commands.cache(['add', pkg], function (err, result) {
       if (err) {
         reject(err);
       } else {
@@ -75,7 +106,7 @@ function npmCacheAdd(pkg) {
     return info ? info : manifest(pkg);
   }).then(function (info) {
     return {
-      cache: path.join(info.npmConfig.cache, '_cacache'),
+      cache: path.join(npm.cache, '_cacache'),
       name: info.manifest.name,
       version: info.manifest.version,
       integrity: info.integrity,
@@ -94,19 +125,14 @@ function npmCacheAdd(pkg) {
  * @return {Promise<Object>} The manifest object.
  */
 function manifest(pkg) {
-  return Q.Promise(function (resolve, reject) {
-    npmConfig().then(function (npmConfig) {
-      return require('pacote').manifest(pkg, npmConfig).then(function (pkgJson) {
-        resolve({
-          npmConfig: npmConfig,
-          integrity: pkgJson._integrity,
-          manifest: {
-            name: pkgJson.name,
-            version: pkgJson.version
-          }
-        });
-      });
-    });
+  return require('pacote').manifest(pkg, npmConfig()).then(function (pkgJson) {
+    return {
+      integrity: pkgJson._integrity,
+      manifest: {
+        name: pkgJson.name,
+        version: pkgJson.version
+      }
+    };
   });
 }
 
