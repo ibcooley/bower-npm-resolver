@@ -26,14 +26,3 @@
 /node_modules
 
 # Do not dev files
-/test
-/src
-/scripts
-/gulpfile.js
-/.babelrc
-/.github
-/.eslintrc
-/.eslintrc.json
-/.eslintignore
-/.gitattributes
-/.travis.yml
