@@ -35,8 +35,8 @@ const Q = require('q');
 const path = require('path');
 const writeStreamAtomic = require('fs-write-stream-atomic');
 
-const npmVersions = require('./npm/versions');
-const npmCache = require('./npm/cache');
+const npmVersions = require('./versions');
+const npmCache = require('./cache');
 
 /**
  * Executes `npm cache-add` command with passed arguments.
