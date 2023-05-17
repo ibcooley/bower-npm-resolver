@@ -36,7 +36,8 @@ const Q = require('q');
 module.exports = function npmConfig() {
   return Q.Promise(function(resolve, reject) {
     if (npm.flatOptions) {
-      return npm.flatOptions;
+      resolve(npm.flatOptions);
+      return;
     }
 
     const opts = {
