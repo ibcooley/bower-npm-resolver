@@ -33,8 +33,5 @@
 /.idea
 *.iml
 
-# Build
-/dist
-
 # Temporary directories
 /tmp-*
