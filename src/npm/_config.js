@@ -24,7 +24,8 @@
 
 'use strict';
 
-const {exec} = require('child_process');
+const requireg = require('requireg');
+const npm = requireg('npm');
 const Q = require('q');
 
 /**
@@ -34,12 +35,19 @@ const Q = require('q');
  */
 module.exports = function npmConfig() {
   return Q.Promise(function(resolve, reject) {
-    exec('npm config list --json', (err, json) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(JSON.parse(json));
+    if (npm.flatOptions) {
+      resolve(npm.flatOptions);
+      return;
+    }
+
+    const opts = {
+      registry: npm.config.get('registry'),
+    };
+
+    npm.config.keys.forEach((k) => {
+      opts[k] = npm.config.get(k);
     });
+
+    resolve(opts);
   });
 };

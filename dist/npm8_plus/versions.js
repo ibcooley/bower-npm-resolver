@@ -24,18 +24,30 @@
 
 'use strict';
 
-const load = require('../../src/npm-utils-factory').getLoad();
-
-describe('load', () => {
-  it('should load npm and get meta data', (done) => {
-    load()
-        .then((meta) => {
-          expect(meta).toBeDefined();
-          expect(meta.version).toBeDefined();
-          done();
-        })
-        .catch((err) => {
-          done.fail(err);
-        });
+var Q = require('q');
+var packument = require('packument');
+var npmLoad = require('./_load');
+var npmConfig = require('./_config');
+module.exports = function versions(pkg) {
+  return npmLoad().then(function () {
+    return getVersions(pkg);
   });
-});
+};
+
+/**
+ * Get all versions available for given package.
+ *
+ * @param {string} pkg The package.
+ * @return {Promise<Array<string>>} An array containing all versions for given package.
+ */
+function getVersions(pkg) {
+  return Q.promise(function (resolve, reject) {
+    packument(pkg, npmConfig(), function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(Object.keys(result.versions));
+      }
+    });
+  });
+}

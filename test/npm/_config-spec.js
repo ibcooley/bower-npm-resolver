@@ -24,8 +24,8 @@
 
 'use strict';
 
-const npmLoad = require('../../src/npm/_load');
-const npmConfig = require('../../src/npm/_config');
+const npmLoad = require('../../src/npm-utils-factory').getLoad();
+const npmConfig = require('../../src/npm-utils-factory').getConfig();
 
 describe('config', () => {
   it('should load npm and get config', (done) => {

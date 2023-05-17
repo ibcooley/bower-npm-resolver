@@ -24,18 +24,23 @@
 
 'use strict';
 
-const load = require('../../src/npm-utils-factory').getLoad();
+var _require = require('child_process'),
+  exec = _require.exec;
+var Q = require('q');
 
-describe('load', () => {
-  it('should load npm and get meta data', (done) => {
-    load()
-        .then((meta) => {
-          expect(meta).toBeDefined();
-          expect(meta.version).toBeDefined();
-          done();
-        })
-        .catch((err) => {
-          done.fail(err);
-        });
+/**
+ * Get npm options as a flat object.
+ *
+ * @return {Object} NPM Options.
+ */
+module.exports = function npmConfig() {
+  return Q.Promise(function (resolve, reject) {
+    exec('npm config list --json', function (err, json) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(JSON.parse(json));
+    });
   });
-});
+};
